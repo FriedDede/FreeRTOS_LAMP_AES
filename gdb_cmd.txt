@@ -1,0 +1,4 @@
+
+file Demo/RISC-V-Qemu-virt_GCC/build/RTOSDemo.axf
+target remote localhost:1234
+break main
