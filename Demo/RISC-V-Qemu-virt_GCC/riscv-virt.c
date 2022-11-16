@@ -26,11 +26,8 @@
  */
 
 #include <FreeRTOS.h>
-
-#include <string.h>
-
 #include "riscv-virt.h"
-#include "ns16550.h"
+#include "uart.h"
 
 int xGetCoreID( void )
 {
@@ -43,18 +40,9 @@ int id;
 
 void vSendString( const char *s )
 {
-struct device dev;
-size_t i;
-
-	dev.addr = NS16550_ADDR;
-
+	uart_init();
 	portENTER_CRITICAL();
-
-	for (i = 0; i < strlen(s); i++) {
-		vOutNS16550( &dev, s[i] );
-	}
-	vOutNS16550( &dev, '\n' );
-
+	uart_print(s,str_len(s));
 	portEXIT_CRITICAL();
 }
 

@@ -15,7 +15,7 @@ struct TIMER_peripheral {
 };
 
 #define TIMER_0 ((struct TIMER_peripheral *)(0x00200000))
-
+#define TIMER_0_ADDRESS ( 0x00200000 )
 /**
  * Time constants.
  */

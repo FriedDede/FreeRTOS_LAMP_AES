@@ -1,13 +1,13 @@
 #ifndef LAMP_CORE_H
 #define LAMP_CORE_H
 
+#include <stdint.h>
 /**
  * System types.
- */
 typedef unsigned char  uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int   uint32_t;
-
+*/
 
 /**
  * System frequencies.

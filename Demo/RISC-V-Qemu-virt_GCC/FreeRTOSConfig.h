@@ -29,6 +29,7 @@
 #define FREERTOS_CONFIG_H
 
 #include "riscv-virt.h"
+#include "timer.h"
 
 /*-----------------------------------------------------------
  * Application specific definitions.
@@ -43,8 +44,8 @@
  *----------------------------------------------------------*/
 
 /* See https://www.freertos.org/Using-FreeRTOS-on-RISC-V.html */
-#define configMTIME_BASE_ADDRESS		( CLINT_ADDR + CLINT_MTIME )
-#define configMTIMECMP_BASE_ADDRESS		( CLINT_ADDR + CLINT_MTIMECMP )
+#define configMTIME_BASE_ADDRESS		( TIMER_0_ADDRESS + 0x0 )
+#define configMTIMECMP_BASE_ADDRESS		( TIMER_0_ADDRESS + 0x00000008 )
 
 #define configUSE_PREEMPTION			1
 #define configUSE_IDLE_HOOK				0

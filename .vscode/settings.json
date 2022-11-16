@@ -1,3 +1,9 @@
 {
-    "cmake.sourceDirectory": "/home/amotta/FreeRTOS/Demo/RISC-V-Qemu-virt_GCC"
+    "cmake.sourceDirectory": "/home/amotta/FreeRTOS/Demo/RISC-V-Qemu-virt_GCC",
+    "files.associations": {
+        "string.h": "c",
+        "stdio.h": "c",
+        "stddef.h": "c",
+        "riscv-virt.h": "c"
+    }
 }

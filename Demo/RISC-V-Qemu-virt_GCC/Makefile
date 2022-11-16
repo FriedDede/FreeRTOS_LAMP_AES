@@ -3,10 +3,12 @@ CC      = $(CROSS)gcc
 OBJCOPY = $(CROSS)objcopy
 ARCH    = $(CROSS)ar
 
-BUILD_DIR       = $(abspath ../../build)
+BUILD_DIR       = $(abspath ../../Build)
 RTOS_SOURCE_DIR = $(abspath ../../FreeRTOS-Kernel)
 DEMO_SOURCE_DIR = $(abspath ../Common/Minimal)
-VENDOR_SOURCE_DIR = $(abspath ../../Vendors)
+VENDOR_SOURCE_DIR = $(abspath ../../Payloads)
+DRIVERS_DIR = $(abspath ../../Drivers)
+LOWLEVEL_DIR = $(abspath ../../Low_level)
 
 MACHINEFLAGS = -march=rv32imf -mabi=ilp32f -mcmodel=medany
 
@@ -14,6 +16,7 @@ CPPFLAGS = \
 	-I . -I ../Common/include \
 	-I $(RTOS_SOURCE_DIR)/include \
 	-I $(VENDOR_SOURCE_DIR) \
+	-I $(DRIVERS_DIR) \
 	-I $(RTOS_SOURCE_DIR)/portable/GCC/RISC-V \
 	-I $(RTOS_SOURCE_DIR)/portable/GCC/RISC-V/chip_specific_extensions/RISCV_MTIME_CLINT_no_extensions \
 
@@ -35,7 +38,7 @@ else
     CFLAGS += -O2
 endif
 
-SRCS = main.c main_aes.c riscv-virt.c ns16550.c \
+SRCS = main.c main_aes.c riscv-virt.c \
 	$(DEMO_SOURCE_DIR)/EventGroupsDemo.c \
 	$(DEMO_SOURCE_DIR)/TaskNotify.c \
 	$(DEMO_SOURCE_DIR)/TimerDemo.c \
@@ -50,7 +53,8 @@ SRCS = main.c main_aes.c riscv-virt.c ns16550.c \
 	$(RTOS_SOURCE_DIR)/timers.c \
 	$(RTOS_SOURCE_DIR)/portable/MemMang/heap_4.c \
 	$(RTOS_SOURCE_DIR)/portable/GCC/RISC-V/port.c \
-	$(VENDOR_SOURCE_DIR)/aes.c
+	$(VENDOR_SOURCE_DIR)/aes.c \
+	$(DRIVERS_DIR)/uart.c
 
 ASMS = start.S vector.S \
 	$(RTOS_SOURCE_DIR)/portable/GCC/RISC-V/portASM.S

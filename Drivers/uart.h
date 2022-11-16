@@ -3,7 +3,6 @@
 
 #include "lamp_core.h"
 
-
 /**
  * UART peripheral.
  * FIXME: please note that the following 8-bit registers
