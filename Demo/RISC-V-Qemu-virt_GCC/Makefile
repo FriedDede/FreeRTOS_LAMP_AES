@@ -3,7 +3,7 @@ CC      = $(CROSS)gcc
 OBJCOPY = $(CROSS)objcopy
 ARCH    = $(CROSS)ar
 
-BUILD_DIR       = build
+BUILD_DIR       = $(abspath ../../build)
 RTOS_SOURCE_DIR = $(abspath ../../FreeRTOS-Kernel)
 DEMO_SOURCE_DIR = $(abspath ../Common/Minimal)
 VENDOR_SOURCE_DIR = $(abspath ../../Vendors)
