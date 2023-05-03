@@ -53,7 +53,7 @@
 #define configCPU_CLOCK_HZ				( 1000000 )
 #define configTICK_RATE_HZ				( ( TickType_t ) 100)
 #define configMAX_PRIORITIES			( 7 )
-#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 512 )
+#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 1024 )
 #define configTOTAL_HEAP_SIZE			( ( size_t ) 64500 )
 #define configMAX_TASK_NAME_LEN			( 16 )
 #define configUSE_TRACE_FACILITY		0
@@ -80,7 +80,7 @@
 #define configTIMER_TASK_STACK_DEPTH	( 110 )
 
 /* RISC-V definitions. */
-#define configISR_STACK_SIZE_WORDS		2048
+#define configISR_STACK_SIZE_WORDS		300
 
 /* Task priorities.  Allow these to be overridden. */
 #ifndef uartPRIMARY_PRIORITY

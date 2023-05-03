@@ -195,10 +195,9 @@ void AES_in_place(uint8_t k[11][16], uint8_t* m){
     AddRoundKey(m, k[i+1]);
 }
 
-unsigned char key[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
 
 // aes usage protoype
-int aes_run(uint8_t state[16])
+int aes_run(uint8_t state[16], uint8_t key[16])
 {
         int i;
 	#if ISA == 1

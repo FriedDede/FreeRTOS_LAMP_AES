@@ -40,7 +40,7 @@ _start:
     csrrw   zero, mtvec, t0
 
     /* Call main, leaving the arguments undefined. */
-    call    main
+    jal    main
 
     /* Spin after main() returns. */
 1:

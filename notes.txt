@@ -1,0 +1,18 @@
+CRS debugging:
+Problema: dopo ecall usmstatus_next.mpp = PRIL_LVL_S, anche se eravamo in M mode
+
+Note:
+(csr_rf.sv:529)
+    -   trap_lvl viene gestito correttamente, rimane sempre M
+(csr_rf.sv:598) 
+    -   mret gestito correttamente
+(RTOSDemo.axf_disam.txt:5000)    
+    -   FreeRTOS gestisce correttamente il restore di mstatus durante interrupts e exceptions   
+    -   Alcune ecall hanno successo, a patto che durante l'esecuzione dell'eccezione FreeRTOS sovrascriva mstatus, 
+    -   riportando mstatus.mpp a PRIV_LVL_M. Se questo non avviene la macchina esegue un mret 
+    -   con target S mode, che l'os non si aspetta.
+(csr_rf.sv)     
+    -   Sembra che usmstatus_next.mpp non venga messo esplicitamente a PRIL_LVL_S da nessuna parte 
+(csr_rf.sv:585) 
+    -   usmstatus_next.mpp non è caricato da qua, priv_lvl == PRIV_LVL_M durante la ecall
+

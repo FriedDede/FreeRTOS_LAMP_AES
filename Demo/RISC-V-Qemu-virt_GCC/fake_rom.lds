@@ -23,6 +23,8 @@ SECTIONS
 		*(.text .text.*)
 		*(.gnu.linkonce.t.*)
 	} >rom AT>rom
+
+	. = . + ALIGN(4);
 	
 	.fini :
 	{

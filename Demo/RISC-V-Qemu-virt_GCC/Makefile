@@ -1,4 +1,4 @@
-CROSS   = /work1/tools/riscv32-8.2.0/bin/riscv32-unknown-elf-
+CROSS   = riscv32-unknown-elf-
 CC      = $(CROSS)gcc
 OBJCOPY = $(CROSS)objcopy
 ARCH    = $(CROSS)ar
@@ -10,10 +10,11 @@ VENDOR_SOURCE_DIR = $(abspath ../../Payloads)
 DRIVERS_DIR = $(abspath ../../Drivers)
 LOWLEVEL_DIR = $(abspath ../../Low_level)
 
-MACHINEFLAGS = -march=rv32imf -mabi=ilp32f -mcmodel=medany
+MACHINEFLAGS = -march=rv32im -mabi=ilp32 -lm -lgcc
 
 CPPFLAGS = \
-	-I . -I ../Common/include \
+	-I . \
+	-I ../Common/include \
 	-I $(RTOS_SOURCE_DIR)/include \
 	-I $(VENDOR_SOURCE_DIR) \
 	-I $(DRIVERS_DIR) \
@@ -28,7 +29,7 @@ CFLAGS = $(MACHINEFLAGS)\
 	-fno-builtin-printf
 
 ASFLAGS = $(MACHINEFLAGS)
-LDFLAGS = -nostartfiles -Tfake_rom.lds \
+LDFLAGS = -nostartfiles -T$(LOWLEVEL_DIR)/riscv32_mod.ld\
 	-Xlinker --gc-sections \
 	-Xlinker --defsym=__stack_size=300
 
@@ -62,7 +63,7 @@ ASMS = start.S vector.S \
 OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o) $(ASMS:%.S=$(BUILD_DIR)/%.o)
 DEPS = $(SRCS:%.c=$(BUILD_DIR)/%.d) $(ASMS:%.S=$(BUILD_DIR)/%.d)
 
-$(BUILD_DIR)/RTOSDemo.axf: $(OBJS) fake_rom.lds Makefile
+$(BUILD_DIR)/RTOSDemo.axf: $(OBJS) $(LOWLEVEL_DIR)/riscv32_mod.ld Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
 $(BUILD_DIR)/%.o: %.c Makefile

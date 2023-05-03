@@ -52,10 +52,17 @@ find the queue full. */
 
 /* The queue used by both tasks. */
 static QueueHandle_t xAesInQueue = NULL;
+static QueueHandle_t xFakeAesInQueue = NULL;
 
 /*--AES-testing--------------------------Vendors/aes.c-------*/
 uint8_t state[16] ={0x40,0x41,0x40,0x41,0x40,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,};
-extern int aes_run(uint8_t*);
+uint8_t fake_state[16] ={0x40,0x41,0x40,0x41,0x40,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,};
+
+uint8_t key[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+uint8_t fake_key[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+uint8_t puf_key[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+
+extern int aes_run(uint8_t*, uint8_t*);
 /*-----------------------------------------------------------*/
 
 /*
@@ -63,8 +70,8 @@ extern int aes_run(uint8_t*);
 */
 static void prvDispatcherTask( void *pvParameters )
 {
-	uint8_t *bufferAddrres;
-	bufferAddrres = state;
+	uint8_t *state_address = state;
+	uint8_t *fake_state_address = fake_state;
 
 	TickType_t xNextWakeTime;
 	const char * const pcMessage = "Block enqueued";
@@ -78,15 +85,17 @@ static void prvDispatcherTask( void *pvParameters )
 	sprintf( buf, "%d: %s: %s", xGetCoreID(),
 				pcTaskGetName( xTaskGetCurrentTaskHandle() ),
 				pcMessage);
-		vSendString( buf );
-	xQueueSend( xAesInQueue, &bufferAddrres , 0U );
+		//vSendString( buf );
+
+	xQueueSend( xAesInQueue, &state_address , 0U );
+	xQueueSend( xFakeAesInQueue, &fake_state_address, 0U );
 
 	while(1)
 	{
 		sprintf( buf, "%d: %s: %s", xGetCoreID(),
 				pcTaskGetName( xTaskGetCurrentTaskHandle() ),
 				pcMessage);
-		vSendString( buf );
+		//vSendString( buf );
 
 		/* Place this task in the blocked state until it is time to run again. */
 		xTaskDelayUntil( &xNextWakeTime, mainQUEUE_SEND_FREQUENCY_MS );
@@ -95,7 +104,8 @@ static void prvDispatcherTask( void *pvParameters )
 		toggle the LED.  0 is used as the block time so the sending operation
 		will not block - it shouldn't need to block as the queue should always
 		be empty at this point in the code. */
-		xQueueSend( xAesInQueue, &bufferAddrres, 0U );
+		xQueueSend( xAesInQueue, &state_address, 0U );
+		xQueueSend( xFakeAesInQueue, &state_address, 0U );
 	}
 }
 
@@ -120,23 +130,67 @@ static void prvEncoderTask( void *pvParameters )
 		{
 			sprintf(buf, "task %s: failed receive from queue",
 					pcTaskGetName( xTaskGetCurrentTaskHandle()));
-			vSendString(buf);
+			//vSendString(buf);
 		}
-		/*  To get here something must have been received from the queue, but
-		is it the expected value?  If it is, toggle the LED. */
+		
+		
 		if( receivedState == state )
 		{
-			aes_run(receivedState);
+			aes_run(state, key);
 			for (uint8_t i = 0; i < 16; i++)
 			{
 				sprintf(aes_buf+(4+(2*i)),"%02x",receivedState[i]);
 				
 			}
-			vSendString( aes_buf);
+			//vSendString( aes_buf);
 		}
 		else
 		{
-			vSendString( pcFailMessage );
+			//vSendString( pcFailMessage );
+		}
+	}
+}
+
+static void prvFakeEncoderTask( void *pvParameters )
+{
+	uint8_t *receivedState;
+	const char * const pcFailMessage = "Unexpected value received\r\n";
+	/* Remove compiler warning about unused parameter. */
+	( void ) pvParameters;
+
+	while(1)
+	{
+		char buf[40];
+		char aes_buf[4+(2*16)];
+		sprintf(aes_buf,"AES:");
+		/* Wait until something arrives in the queue - this task will block
+		indefinitely provided INCLUDE_vTaskSuspend is set to 1 in
+		FreeRTOSConfig.h. */
+		if(xQueueReceive( xFakeAesInQueue, &receivedState, portMAX_DELAY ) == pdFALSE)
+		{
+			sprintf(buf, "task %s: failed receive from queue",
+					pcTaskGetName( xTaskGetCurrentTaskHandle()));
+			//vSendString(buf);
+		}
+		
+		
+		if( receivedState == state )
+		{
+			for (uint8_t i = 0; i < 16; i++)
+			{
+				fake_state[i] = receivedState[i];
+			}
+			aes_run(fake_state, fake_key);
+			for (uint8_t i = 0; i < 16; i++)
+			{
+				sprintf(aes_buf+(4+(2*i)),"%02x",fake_state[i]);
+				
+			}
+			//vSendString( aes_buf);
+		}
+		else
+		{
+			//vSendString( pcFailMessage );
 		}
 	}
 }
@@ -145,10 +199,15 @@ static void prvEncoderTask( void *pvParameters )
 
 int main_aes( void )
 {
-	vSendString( "FreeRTOS AES QEMU dev bench:" );
-	vSendString( "Tasks create start" );
+	//vSendString( "FreeRTOS AES QEMU dev bench:" );
+	//vSendString( "Tasks create start" );
+	
 	/* Create the queue. */
 	xAesInQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( uint8_t* ) );
+	xFakeAesInQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( uint8_t* ) );
+	
+	/* Encode the fake key from the true key with a puf function*/
+	aes_run(fake_key,puf_key);
 
 	if( xAesInQueue != NULL )
 	{
@@ -158,12 +217,12 @@ int main_aes( void )
 					mainQUEUE_RECEIVE_TASK_PRIORITY, NULL );
 		xTaskCreate( prvDispatcherTask, "Tx", configMINIMAL_STACK_SIZE * 2U, NULL,
 					mainQUEUE_SEND_TASK_PRIORITY, NULL );
-		vSendString( "Tasks create success" );
+		//SendString( "Tasks create success" );
 	}
 
-	vSendString( "Scheduler started" );
+	//vSendString( "Scheduler started" );
 	vTaskStartScheduler();
-	vSendString( "Failed to start scheduler" );
+	//vSendString( "Failed to start scheduler" );
 
 	return 0;
 }

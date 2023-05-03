@@ -68,6 +68,7 @@ _start:
 	addi a0, a0, REGSIZE
 	bltu a0, a1, 1b
 2:
+
 	// argc, argv, envp is 0
 	li  a0, 0
 	li  a1, 0
