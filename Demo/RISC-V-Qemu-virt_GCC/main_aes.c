@@ -215,6 +215,8 @@ int main_aes( void )
 		file. */
 		xTaskCreate( prvEncoderTask, "AES", configMINIMAL_STACK_SIZE * 2U, NULL,
 					mainQUEUE_RECEIVE_TASK_PRIORITY, NULL );
+		xTaskCreate( prvFakeEncoderTask, "FAKEAES", configMINIMAL_STACK_SIZE * 2U, NULL,
+					mainQUEUE_RECEIVE_TASK_PRIORITY, NULL );
 		xTaskCreate( prvDispatcherTask, "Tx", configMINIMAL_STACK_SIZE * 2U, NULL,
 					mainQUEUE_SEND_TASK_PRIORITY, NULL );
 		//SendString( "Tasks create success" );
