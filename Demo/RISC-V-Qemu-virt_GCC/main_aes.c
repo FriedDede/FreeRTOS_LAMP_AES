@@ -31,6 +31,7 @@
 #include <queue.h>
 
 #include <stdio.h>
+#include <stdint.h>
 
 #include "riscv-virt.h"
 
@@ -85,7 +86,9 @@ static void prvDispatcherTask( void *pvParameters )
 	sprintf( buf, "%d: %s: %s", xGetCoreID(),
 				pcTaskGetName( xTaskGetCurrentTaskHandle() ),
 				pcMessage);
-		//vSendString( buf );
+		#ifdef QEMU 
+			vSendString( buf );
+		#endif
 
 	xQueueSend( xAesInQueue, &state_address , 0U );
 	xQueueSend( xFakeAesInQueue, &fake_state_address, 0U );
@@ -95,7 +98,9 @@ static void prvDispatcherTask( void *pvParameters )
 		sprintf( buf, "%d: %s: %s", xGetCoreID(),
 				pcTaskGetName( xTaskGetCurrentTaskHandle() ),
 				pcMessage);
-		//vSendString( buf );
+		#ifdef QEMU 
+			vSendString( buf );
+		#endif
 
 		/* Place this task in the blocked state until it is time to run again. */
 		xTaskDelayUntil( &xNextWakeTime, mainQUEUE_SEND_FREQUENCY_MS );
@@ -130,7 +135,9 @@ static void prvEncoderTask( void *pvParameters )
 		{
 			sprintf(buf, "task %s: failed receive from queue",
 					pcTaskGetName( xTaskGetCurrentTaskHandle()));
-			//vSendString(buf);
+			#ifdef QEMU 
+			vSendString( buf );
+			#endif
 		}
 		
 		
@@ -142,11 +149,15 @@ static void prvEncoderTask( void *pvParameters )
 				sprintf(aes_buf+(4+(2*i)),"%02x",receivedState[i]);
 				
 			}
-			//vSendString( aes_buf);
+			#ifdef QEMU 
+				vSendString( buf );
+			#endif
 		}
 		else
 		{
-			//vSendString( pcFailMessage );
+			#ifdef QEMU 
+				vSendString( pcFailMessage );
+			#endif
 		}
 	}
 }
@@ -170,7 +181,9 @@ static void prvFakeEncoderTask( void *pvParameters )
 		{
 			sprintf(buf, "task %s: failed receive from queue",
 					pcTaskGetName( xTaskGetCurrentTaskHandle()));
-			//vSendString(buf);
+			#ifdef QEMU 
+				vSendString( buf );
+			#endif
 		}
 		
 		
@@ -186,11 +199,15 @@ static void prvFakeEncoderTask( void *pvParameters )
 				sprintf(aes_buf+(4+(2*i)),"%02x",fake_state[i]);
 				
 			}
-			//vSendString( aes_buf);
+			#ifdef QEMU 
+				vSendString( buf );
+			#endif
 		}
 		else
 		{
-			//vSendString( pcFailMessage );
+			#ifdef QEMU 
+				vSendString( pcFailMessage );
+			#endif
 		}
 	}
 }
@@ -199,8 +216,11 @@ static void prvFakeEncoderTask( void *pvParameters )
 
 int main_aes( void )
 {
-	//vSendString( "FreeRTOS AES QEMU dev bench:" );
-	//vSendString( "Tasks create start" );
+	#ifdef QEMU 
+		vSendString( "FreeRTOS AES QEMU dev bench:" );
+		vSendString( "Tasks create start" );
+	#endif
+	
 	
 	/* Create the queue. */
 	xAesInQueue = xQueueCreate( mainQUEUE_LENGTH, sizeof( uint8_t* ) );
@@ -219,10 +239,13 @@ int main_aes( void )
 					mainQUEUE_RECEIVE_TASK_PRIORITY, NULL );
 		xTaskCreate( prvDispatcherTask, "Tx", configMINIMAL_STACK_SIZE * 2U, NULL,
 					mainQUEUE_SEND_TASK_PRIORITY, NULL );
+		#ifdef QEMU			
 		//SendString( "Tasks create success" );
+		#endif
 	}
-
+	#ifdef QEMU
 	//vSendString( "Scheduler started" );
+	#endif
 	vTaskStartScheduler();
 	//vSendString( "Failed to start scheduler" );
 

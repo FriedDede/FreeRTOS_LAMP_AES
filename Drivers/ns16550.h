@@ -1,5 +1,5 @@
 /*
- * FreeRTOS V202112.00
+ * FreeRTOS V202212.00
  * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -22,53 +22,17 @@
  * https://www.FreeRTOS.org
  * https://www.github.com/FreeRTOS
  *
- * 1 tab == 4 spaces!
  */
 
-#include <FreeRTOS.h>
-#include "riscv-virt.h"
+#ifndef NS16550_H_
+#define NS16550_H_
 
+#include <stdint.h>
 
-int xGetCoreID( void )
-{
-int id;
+struct device {
+	uintptr_t addr;
+};
 
-	__asm ("csrr %0, mhartid" : "=r" ( id ) );
+void vOutNS16550( struct device *dev, unsigned char c );
 
-	return id;
-}
-
-#ifndef QEMU
-#include "uart.h"
-void vSendString( const char *s )
-{
-	uart_init();
-	portENTER_CRITICAL();
-	uart_print(s,str_len(s));
-	portEXIT_CRITICAL();
-}
-#else
-#include "ns16550.h"
-void vSendString( const char *s )
-{
-struct device dev;
-size_t i;
-
-	dev.addr = NS16550_ADDR;
-
-	portENTER_CRITICAL();
-
-	for (i = 0; i < strlen(s); i++) {
-		vOutNS16550( &dev, s[i] );
-	}
-	vOutNS16550( &dev, '\n' );
-
-	portEXIT_CRITICAL();
-}
-#endif
-
-void handle_trap(void)
-{
-	while (1)
-		;
-}
+#endif /* NS16550_H_ */

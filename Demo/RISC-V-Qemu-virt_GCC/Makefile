@@ -38,6 +38,9 @@ ifeq ($(DEBUG), 1)
 else
     CFLAGS += -O2
 endif
+ifeq ($(QEMU), 1)
+    CFLAGS += -D QEMU=1
+endif
 
 SRCS = main.c main_aes.c riscv-virt.c \
 	$(DEMO_SOURCE_DIR)/EventGroupsDemo.c \
@@ -55,7 +58,8 @@ SRCS = main.c main_aes.c riscv-virt.c \
 	$(RTOS_SOURCE_DIR)/portable/MemMang/heap_4.c \
 	$(RTOS_SOURCE_DIR)/portable/GCC/RISC-V/port.c \
 	$(VENDOR_SOURCE_DIR)/aes.c \
-	$(DRIVERS_DIR)/uart.c
+	$(DRIVERS_DIR)/uart.c \
+	$(DRIVERS_DIR)/ns16550.c
 
 ASMS = start.S vector.S \
 	$(RTOS_SOURCE_DIR)/portable/GCC/RISC-V/portASM.S

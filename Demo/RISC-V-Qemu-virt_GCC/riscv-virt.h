@@ -38,6 +38,16 @@
 
 #define PRIM_HART			0
 
+#ifdef QEMU
+#define CLINT_ADDR			CONS(0x02000000, UL)
+#define CLINT_MSIP			CONS(0x0000, UL)
+#define CLINT_MTIMECMP		CONS(0x4000, UL)
+#define CLINT_MTIME			CONS(0xbff8, UL)
+
+#define NS16550_ADDR		CONS(0x10000000, UL)
+
+#endif
+
 #ifndef __ASSEMBLER__
 
 int xGetCoreID( void );
