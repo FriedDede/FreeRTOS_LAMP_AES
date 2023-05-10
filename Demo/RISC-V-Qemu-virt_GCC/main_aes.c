@@ -34,6 +34,9 @@
 #include <stdint.h>
 
 #include "riscv-virt.h"
+#ifndef QEMU
+#include "../../Payloads/trng.h"
+#endif
 
 /* Priorities used by the tasks. */
 #define mainQUEUE_RECEIVE_TASK_PRIORITY (tskIDLE_PRIORITY + 2)
@@ -51,7 +54,7 @@ preempt the sending task and remove the queue items each time the sending task
 writes to the queue.  Therefore the queue will never have more than one item in
 it at any time, and even with a queue length of 1, the sending task will never
 find the queue full. */
-#define mainQUEUE_LENGTH (1)
+
 #define aesFAKE_COUNT (1)
 #define init_state                                                                                     \
 	{                                                                                                  \
@@ -78,10 +81,6 @@ uint8_t states[aesFAKE_COUNT +1][16];
 uint8_t keys[aesFAKE_COUNT +1][16];
 aes_param_t aes_CB[aesFAKE_COUNT + 1];
 
-/* The queue used by both tasks. */
-static QueueHandle_t xAesInQueue = NULL;
-static QueueHandle_t xFakeAesInQueue = NULL;
-
 extern int aes_run(uint8_t *state, uint8_t *key);
 /*-----------------------------------------------------------*/
 
@@ -92,7 +91,11 @@ static void prvPriorityManagerTask(void *pvParameters)
 	while (1)
 	{	
 		portENTER_CRITICAL()
+		#ifdef QEMU
 		selector += 1;
+		#else
+		selector = (uint8_t) trng();
+		#endif
 		selector = selector % (aesFAKE_COUNT +1 );
 		for (uint8_t i = 0; i < (aesFAKE_COUNT + 1); i++)
 		{
@@ -205,11 +208,11 @@ int main_aes(void)
 		mainPRIO_MANAGER_TASK_PRIOTIY, 
 		NULL
 	);
-#ifdef QEMU
-	vSendString( "Priority Manager task Created");
-	vSendString( "Tasks setup completed" );
-	vSendString( "Scheduler started" );
-#endif
+	#ifdef QEMU
+		vSendString( "Priority Manager task Created");
+		vSendString( "Tasks setup completed" );
+		vSendString( "Scheduler started" );
+	#endif
 	vTaskStartScheduler();
 
 	return 0;

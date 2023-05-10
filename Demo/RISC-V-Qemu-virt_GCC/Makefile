@@ -29,7 +29,7 @@ CFLAGS = $(MACHINEFLAGS)\
 	-fno-builtin-printf
 
 ASFLAGS = $(MACHINEFLAGS)
-LDFLAGS = -nostartfiles -T$(LOWLEVEL_DIR)/riscv32_mod.ld\
+LDFLAGS = -nostartfiles -T$(LOWLEVEL_DIR)/riscv32_mod_pre.ld\
 	-Xlinker --gc-sections \
 	-Xlinker --defsym=__stack_size=800
 
@@ -58,6 +58,7 @@ SRCS = main.c main_aes.c riscv-virt.c \
 	$(RTOS_SOURCE_DIR)/portable/MemMang/heap_4.c \
 	$(RTOS_SOURCE_DIR)/portable/GCC/RISC-V/port.c \
 	$(VENDOR_SOURCE_DIR)/aes.c \
+	$(VENDOR_SOURCE_DIR)/trng.c \
 	$(DRIVERS_DIR)/uart.c \
 	$(DRIVERS_DIR)/ns16550.c
 
@@ -67,7 +68,9 @@ ASMS = start.S vector.S \
 OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o) $(ASMS:%.S=$(BUILD_DIR)/%.o)
 DEPS = $(SRCS:%.c=$(BUILD_DIR)/%.d) $(ASMS:%.S=$(BUILD_DIR)/%.d)
 
-$(BUILD_DIR)/RTOSDemo.axf: $(OBJS) $(LOWLEVEL_DIR)/riscv32_mod.ld Makefile
+$(BUILD_DIR)/RTOSDemo.axf: $(OBJS) $(LOWLEVEL_DIR)/riscv32_mod_pre.ld Makefile
+	rm $(LOWLEVEL_DIR)/riscv32_mod_pre.ld
+	$(CC) -E -P -x c $(CPPFLAGS) $(CFLAGS) $(LOWLEVEL_DIR)/riscv32_mod.ld >> $(LOWLEVEL_DIR)/riscv32_mod_pre.ld
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
 $(BUILD_DIR)/%.o: %.c Makefile
