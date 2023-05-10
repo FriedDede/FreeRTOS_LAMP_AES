@@ -17,3 +17,6 @@ aprile 2023:
 5/6/2023
 --> Bug di ecall e mret risolto correttamente, bisognava togliere i cast a logic nel csr_rf
 --> Reso simulabile su QEMU per sviluppo sw se buildato con make_qemu.sh
+
+5/10/2030
+--> Implementato interleaving di più processi aes, tramite un thread che gira le priorita degli N aes per scegliere chi fare eseguire.

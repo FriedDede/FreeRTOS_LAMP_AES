@@ -17,13 +17,27 @@ OUTPUT_FORMAT("elf32-littleriscv", "elf32-littleriscv", "elf32-littleriscv")
 OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
+/* QEMU
+*/
+ram_base 		= 0x80000000;
+rom_base 		= 0x80080000;
+vector_base 	= 0x00000000;
+vector_lenght  	= 0x0;
+
+/* LAMP
+*/
+/*ram_base 		= 0x00000100;
+rom_base 		= 0x00080100;
+vector_base 	= 0x00000000;
+vector_lenght  	= 0x100;
+*/
 MEMORY
 {
     /* Memory section to accommodate the vector table */
-    VECTORS (rwx) : ORIGIN = 0,     LENGTH = 0x100
+    VECTORS (rwx) : ORIGIN = vector_base,     LENGTH = vector_lenght
     /* Memory section to store program and data */
-    rom (rxa) : ORIGIN = 0x00000100, LENGTH = 512K
-	ram (wxa) : ORIGIN = 0x00080100, LENGTH = 512K
+    rom (rxa) : ORIGIN = ram_base, LENGTH = 512K
+	ram (wxa) : ORIGIN = rom_base, LENGTH = 512K
 }
 
 __min_stack      = 0x800;   /* 2K minimum stack */

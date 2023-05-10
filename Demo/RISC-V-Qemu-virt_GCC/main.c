@@ -50,15 +50,13 @@ int main( void )
 	#if( mainVECTOR_MODE_DIRECT == 1 )
 	{
 		__asm__ volatile( "csrw mtvec, %0" :: "r"( freertos_risc_v_trap_handler ) );
-		taskENABLE_INTERRUPTS();
 	}
 	#else
 	{
 		__asm__ volatile( "csrw mtvec, %0" :: "r"( ( uintptr_t )freertos_vector_table | 0x1 ) );
-		taskENABLE_INTERRUPTS();
 	}
 	#endif
-
+	portENABLE_INTERRUPTS();
 #if defined(DEMO_AES)
 	ret = main_aes();
 #else

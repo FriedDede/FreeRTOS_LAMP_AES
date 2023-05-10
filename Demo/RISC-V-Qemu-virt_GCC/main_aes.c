@@ -40,7 +40,7 @@
 #define mainQUEUE_SEND_TASK_PRIORITY (tskIDLE_PRIORITY + 1)
 
 #define mainAES_TASK_PRIOTIY (tskIDLE_PRIORITY + 1)
-#define mainPRIO_MANAGER_TASK_PRIOTIY (tskIDLE_PRIORITY + 2)
+#define mainPRIO_MANAGER_TASK_PRIOTIY (tskIDLE_PRIORITY + 3)
 /* The rate at which data is sent to the queue.  The 200ms value is converted
 to ticks using the pdMS_TO_TICKS() macro. */
 #define mainQUEUE_SEND_FREQUENCY_MS pdMS_TO_TICKS(1000)
@@ -71,7 +71,7 @@ typedef struct aes_param
 	uint8_t tag;
 	uint8_t *key;
 	uint8_t *state;
-	TaskHandle_t *task;
+	TaskHandle_t task;
 } aes_param_t;
 
 uint8_t states[aesFAKE_COUNT +1][16];
@@ -96,7 +96,7 @@ static void prvPriorityManagerTask(void *pvParameters)
 		selector = selector % (aesFAKE_COUNT +1 );
 		for (uint8_t i = 0; i < (aesFAKE_COUNT + 1); i++)
 		{
-			TaskHandle_t aes_selected_handler = *aes_current_cb[i].task;
+			TaskHandle_t aes_selected_handler = aes_current_cb[i].task;
 			if (i != selector)
 			{
 				vTaskPrioritySet(aes_selected_handler, mainAES_TASK_PRIOTIY);
@@ -104,6 +104,7 @@ static void prvPriorityManagerTask(void *pvParameters)
 			else{
 				vTaskPrioritySet(aes_selected_handler, mainPRIO_MANAGER_TASK_PRIOTIY);
 			}
+			vSendString("scheduling");
 		}
 		portEXIT_CRITICAL()
 		taskYIELD()
@@ -116,17 +117,20 @@ static void prvEncoderTask(void *pvParameters)
 
 	while (1)
 	{
-		char buf[40];
-		char aes_buf[4 + (2 * 16)];
 		aes_run(aes_current_cb->state, aes_current_cb->key);
-		for (uint8_t i = 0; i < 16; i++)
-		{
-			sprintf(aes_buf + (4 + (2 * i)), "%02x", aes_current_cb->state[i]);
-		}
-#ifdef QEMU
+		#ifdef QEMU
+			char aes_buf[5 + (2 * 16)];
+			portENTER_CRITICAL();
 			sprintf(aes_buf, "AES%d:", aes_current_cb->tag);
-			vSendString(buf);
-#endif
+			portEXIT_CRITICAL();
+			for (uint8_t i = 0; i < 16; i++)
+			{
+				sprintf(aes_buf + (5 + (2 * i)), "%02x", aes_current_cb->state[i]);
+			}
+			portENTER_CRITICAL();
+			vSendString(aes_buf);
+			portEXIT_CRITICAL();
+		#endif
 	}
 }
 
@@ -185,11 +189,12 @@ int main_aes(void)
 			configMINIMAL_STACK_SIZE * 2U, 
 			(void *) &(aes_CB[i]),
 			mainAES_TASK_PRIOTIY, 
-			aes_CB[i].task
+			&(aes_CB[i].task)
 		);
 		#ifdef QEMU
 			char buf[30];
-			sprintf(buf, "Tasks %d created", i);
+			sprintf(buf, "AES Task %d created", i);
+			vSendString(buf);
 		#endif
 	}
 	xTaskCreate(	
@@ -201,9 +206,11 @@ int main_aes(void)
 		NULL
 	);
 #ifdef QEMU
+	vSendString( "Priority Manager task Created");
 	vSendString( "Tasks setup completed" );
 	vSendString( "Scheduler started" );
 #endif
 	vTaskStartScheduler();
+
 	return 0;
 }

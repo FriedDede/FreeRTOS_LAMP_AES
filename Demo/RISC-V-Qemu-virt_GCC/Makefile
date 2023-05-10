@@ -31,7 +31,7 @@ CFLAGS = $(MACHINEFLAGS)\
 ASFLAGS = $(MACHINEFLAGS)
 LDFLAGS = -nostartfiles -T$(LOWLEVEL_DIR)/riscv32_mod.ld\
 	-Xlinker --gc-sections \
-	-Xlinker --defsym=__stack_size=300
+	-Xlinker --defsym=__stack_size=800
 
 ifeq ($(DEBUG), 1)
     CFLAGS += -g3 -ggdb3
