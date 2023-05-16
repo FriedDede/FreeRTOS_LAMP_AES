@@ -1,3 +1,5 @@
+OUT =	RTOSDemo
+
 CROSS   = riscv32-unknown-elf-
 CC      = $(CROSS)gcc
 OBJCOPY = $(CROSS)objcopy
@@ -41,6 +43,10 @@ endif
 ifeq ($(QEMU), 1)
     CFLAGS += -D QEMU=1
 endif
+ifeq ($(LAMP), 1)
+    CFLAGS += -D LAMP=1 -D CPU_ID=$(CPU_ID)
+	OUT = RTOSDemo_$(CPU_ID)
+endif
 
 SRCS = main.c main_aes.c riscv-virt.c \
 	$(DEMO_SOURCE_DIR)/EventGroupsDemo.c \
@@ -68,7 +74,7 @@ ASMS = start.S vector.S \
 OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o) $(ASMS:%.S=$(BUILD_DIR)/%.o)
 DEPS = $(SRCS:%.c=$(BUILD_DIR)/%.d) $(ASMS:%.S=$(BUILD_DIR)/%.d)
 
-$(BUILD_DIR)/RTOSDemo.axf: $(OBJS) $(LOWLEVEL_DIR)/riscv32_mod_pre.ld Makefile
+$(BUILD_DIR)/$(OUT).axf: $(OBJS) $(LOWLEVEL_DIR)/riscv32_mod_pre.ld Makefile
 	rm $(LOWLEVEL_DIR)/riscv32_mod_pre.ld
 	$(CC) -E -P -x c $(CPPFLAGS) $(CFLAGS) $(LOWLEVEL_DIR)/riscv32_mod.ld >> $(LOWLEVEL_DIR)/riscv32_mod_pre.ld
 	$(CC) $(LDFLAGS) $(OBJS) -o $@

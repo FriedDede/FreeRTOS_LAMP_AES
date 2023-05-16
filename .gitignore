@@ -1,5 +1,5 @@
 Build/*
-RTOSDemo.axf*
+*.axf*
 *.log
 *vivado*
 toolchain/*

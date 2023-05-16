@@ -18,18 +18,21 @@ OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
 #ifdef QEMU
+mem_lenght		= 512K;
 ram_base 		= 0x80000000;
 rom_base 		= 0x80080000;
 vector_base 	= 0x00000000;
 vector_lenght  	= 0x0;
 
-#else
+#elif LAMP
 /* LAMP
 */
-ram_base 		= 0x00000100;
-rom_base 		= 0x00080100;
-vector_base 	= 0x00000000;
-vector_lenght  	= 0x100;
+multiplier 		= CPU_ID;
+mem_lenght		= 512K;
+ram_base 		= 0x00000100 + (multiplier*mem_lenght);
+rom_base 		= 0x00080100 + (multiplier*mem_lenght);
+vector_base 	= 0x00000000 + (multiplier*mem_lenght);
+vector_lenght  	= 0x100 + (multiplier*mem_lenght);
 #endif
 
 MEMORY
@@ -37,8 +40,8 @@ MEMORY
     /* Memory section to accommodate the vector table */
     VECTORS (rwx) : ORIGIN = vector_base, LENGTH = vector_lenght
     /* Memory section to store program and data */
-    rom (rxa) : ORIGIN = ram_base, LENGTH = 512K
-	ram (wxa) : ORIGIN = rom_base, LENGTH = 512K
+    rom (rxa) : ORIGIN = ram_base, LENGTH = mem_lenght
+	ram (wxa) : ORIGIN = rom_base, LENGTH = mem_lenght
 }
 
 __min_stack      = 0x800;   /* 2K minimum stack */

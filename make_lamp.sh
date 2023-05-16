@@ -1,9 +1,12 @@
 #!/bin/bash
+
+CPU_ID=$1
+
 cd Demo/RISC-V-Qemu-virt_GCC
-make -j16 DEBUG=1
+make -j16 DEBUG=1 LAMP=1 CPU_ID=$CPU_ID
 cd ../..
 
-BENCH_NAME="RTOSDemo.axf"
+BENCH_NAME="RTOSDemo_${CPU_ID}.axf"
 BENCH_FOLDER="Build/"
 CC_STRIP="riscv32-unknown-elf-strip"
 CC_OBJCOPY="riscv32-unknown-elf-objcopy"
