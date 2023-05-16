@@ -3,3 +3,4 @@ RTOSDemo.axf*
 *.log
 *vivado*
 toolchain/*
+riscv-gnu-toolchain/*
