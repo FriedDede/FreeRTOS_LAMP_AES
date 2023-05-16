@@ -82,19 +82,20 @@ uint8_t keys[aesFAKE_COUNT +1][16];
 aes_param_t aes_CB[aesFAKE_COUNT + 1];
 
 extern int aes_run(uint8_t *state, uint8_t *key);
+
 /*-----------------------------------------------------------*/
 
 static void prvPriorityManagerTask(void *pvParameters)
 {
 	aes_param_t *aes_current_cb = (aes_param_t *) pvParameters;
-	uint8_t selector = 0;
+	uint32_t selector = 0;
 	while (1)
 	{	
 		portENTER_CRITICAL()
 		#ifdef QEMU
 		selector += 1;
 		#else
-		selector = (uint8_t) trng();
+		selector = (uint32_t) trng();
 		#endif
 		selector = selector % (aesFAKE_COUNT +1 );
 		for (uint8_t i = 0; i < (aesFAKE_COUNT + 1); i++)

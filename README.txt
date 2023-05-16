@@ -1,8 +1,8 @@
-FREERTOS LAMP, SCRIPTS GUIDE;
+FREERTOS for LAMP, scripts user guide:
 
 -> make_qemu.sh 
     build for simulation in QEMU
--> make.sh
+-> make_lamp.sh
     build for lamp
     genrate:
         elf             @ Build/RTOSDemo.axf
@@ -14,5 +14,5 @@ FREERTOS LAMP, SCRIPTS GUIDE;
     run qemu simulation
 -> debug_run.sh 
     run qemu simulation with gdb debug stub
-    to use gdb run the scrip, then open another terminal and run:
+    to use gdb run the script, then open another terminal and run:
     riscv32-unknown-elf-gdb -x gdb_cmd.txt
