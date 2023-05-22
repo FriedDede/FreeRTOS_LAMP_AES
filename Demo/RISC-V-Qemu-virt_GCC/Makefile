@@ -12,7 +12,7 @@ VENDOR_SOURCE_DIR = $(abspath ../../Payloads)
 DRIVERS_DIR = $(abspath ../../Drivers)
 LOWLEVEL_DIR = $(abspath ../../Low_level)
 
-MACHINEFLAGS = -march=rv32im -mabi=ilp32 -lm -lgcc
+MACHINEFLAGS = -march=rv32g -mabi=ilp32 -lm -lgcc
 
 CPPFLAGS = \
 	-I . \
