@@ -309,11 +309,11 @@
 #define __riscv_zifencei 2000000
 #define __ELF__ 1
 #define LAMP 1
-#define CPU_ID 1
+#define CPU_ID 0
 OUTPUT_FORMAT("elf32-littleriscv", "elf32-littleriscv", "elf32-littleriscv")
 OUTPUT_ARCH(riscv)
 ENTRY(_start)
-multiplier = 1;
+multiplier = 0;
 mem_lenght = 512K;
 ram_base = 0x00000100 + (multiplier*mem_lenght);
 rom_base = 0x00080100 + (multiplier*mem_lenght);

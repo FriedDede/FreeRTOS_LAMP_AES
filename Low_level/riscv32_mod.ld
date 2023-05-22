@@ -29,10 +29,10 @@ vector_lenght  	= 0x0;
 */
 multiplier 		= CPU_ID;
 mem_lenght		= 512K;
-ram_base 		= 0x00000100 + (multiplier*mem_lenght);
-rom_base 		= 0x00080100 + (multiplier*mem_lenght);
-vector_base 	= 0x00000000 + (multiplier*mem_lenght);
-vector_lenght  	= 0x100 + (multiplier*mem_lenght);
+ram_base 		= 0x00000100 	+ (multiplier*mem_lenght);
+rom_base 		= 0x00080100 	+ (multiplier*mem_lenght);
+vector_base 	= 0x00000000 	+ (multiplier*mem_lenght);
+vector_lenght  	= 0x100 		+ (multiplier*mem_lenght);
 #endif
 
 MEMORY

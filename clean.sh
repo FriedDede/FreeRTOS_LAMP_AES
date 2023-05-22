@@ -1,5 +1,5 @@
 #!/bin/bash
-BENCH_NAME="RTOSDemo.axf"
+BENCH_NAME="RTOSDemo"
 
 rm ${BENCH_NAME}*
 
