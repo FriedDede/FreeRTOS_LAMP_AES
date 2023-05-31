@@ -139,8 +139,8 @@
 #define __INTPTR_MAX__ 0x7fffffff
 #define __INTPTR_WIDTH__ 32
 #define __UINTPTR_MAX__ 0xffffffffU
-#define __GCC_IEC_559 0
-#define __GCC_IEC_559_COMPLEX 0
+#define __GCC_IEC_559 2
+#define __GCC_IEC_559_COMPLEX 2
 #define __FLT_EVAL_METHOD__ 0
 #define __FLT_EVAL_METHOD_TS_18661_3__ 0
 #define __DEC_EVAL_METHOD__ 2
@@ -160,6 +160,7 @@
 #define __FLT_HAS_DENORM__ 1
 #define __FLT_HAS_INFINITY__ 1
 #define __FLT_HAS_QUIET_NAN__ 1
+#define __FP_FAST_FMAF 1
 #define __FLT_IS_IEC_60559__ 2
 #define __DBL_MANT_DIG__ 53
 #define __DBL_DIG__ 15
@@ -176,6 +177,7 @@
 #define __DBL_HAS_DENORM__ 1
 #define __DBL_HAS_INFINITY__ 1
 #define __DBL_HAS_QUIET_NAN__ 1
+#define __FP_FAST_FMA 1
 #define __DBL_IS_IEC_60559__ 2
 #define __LDBL_MANT_DIG__ 113
 #define __LDBL_DIG__ 33
@@ -209,6 +211,7 @@
 #define __FLT32_HAS_DENORM__ 1
 #define __FLT32_HAS_INFINITY__ 1
 #define __FLT32_HAS_QUIET_NAN__ 1
+#define __FP_FAST_FMAF32 1
 #define __FLT32_IS_IEC_60559__ 2
 #define __FLT64_MANT_DIG__ 53
 #define __FLT64_DIG__ 15
@@ -225,6 +228,7 @@
 #define __FLT64_HAS_DENORM__ 1
 #define __FLT64_HAS_INFINITY__ 1
 #define __FLT64_HAS_QUIET_NAN__ 1
+#define __FP_FAST_FMAF64 1
 #define __FLT64_IS_IEC_60559__ 2
 #define __FLT128_MANT_DIG__ 113
 #define __FLT128_DIG__ 33
@@ -257,6 +261,7 @@
 #define __FLT32X_HAS_DENORM__ 1
 #define __FLT32X_HAS_INFINITY__ 1
 #define __FLT32X_HAS_QUIET_NAN__ 1
+#define __FP_FAST_FMAF32x 1
 #define __FLT32X_IS_IEC_60559__ 2
 #define __FLT64X_MANT_DIG__ 113
 #define __FLT64X_DIG__ 33
@@ -279,51 +284,57 @@
 #define __GNUC_STDC_INLINE__ 1
 #define __NO_INLINE__ 1
 #define __CHAR_UNSIGNED__ 1
+#define __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4 1
 #define __GCC_ATOMIC_BOOL_LOCK_FREE 1
 #define __GCC_ATOMIC_CHAR_LOCK_FREE 1
 #define __GCC_ATOMIC_CHAR16_T_LOCK_FREE 1
-#define __GCC_ATOMIC_CHAR32_T_LOCK_FREE 1
-#define __GCC_ATOMIC_WCHAR_T_LOCK_FREE 1
+#define __GCC_ATOMIC_CHAR32_T_LOCK_FREE 2
+#define __GCC_ATOMIC_WCHAR_T_LOCK_FREE 2
 #define __GCC_ATOMIC_SHORT_LOCK_FREE 1
-#define __GCC_ATOMIC_INT_LOCK_FREE 1
-#define __GCC_ATOMIC_LONG_LOCK_FREE 1
+#define __GCC_ATOMIC_INT_LOCK_FREE 2
+#define __GCC_ATOMIC_LONG_LOCK_FREE 2
 #define __GCC_ATOMIC_LLONG_LOCK_FREE 1
 #define __GCC_ATOMIC_TEST_AND_SET_TRUEVAL 1
-#define __GCC_ATOMIC_POINTER_LOCK_FREE 1
+#define __GCC_ATOMIC_POINTER_LOCK_FREE 2
 #define __GCC_HAVE_DWARF2_CFI_ASM 1
 #define __PRAGMA_REDEFINE_EXTNAME 1
 #define __SIZEOF_WCHAR_T__ 4
 #define __SIZEOF_WINT_T__ 4
 #define __SIZEOF_PTRDIFF_T__ 4
 #define __riscv 1
+#define __riscv_atomic 1
 #define __riscv_mul 1
 #define __riscv_div 1
 #define __riscv_muldiv 1
 #define __riscv_xlen 32
+#define __riscv_flen 64
+#define __riscv_fdiv 1
+#define __riscv_fsqrt 1
 #define __riscv_float_abi_soft 1
 #define __riscv_cmodel_medlow 1
 #define __riscv_arch_test 1
 #define __riscv_i 2000000
 #define __riscv_m 2000000
+#define __riscv_a 2000000
+#define __riscv_f 2000000
+#define __riscv_d 2000000
 #define __riscv_zicsr 2000000
 #define __riscv_zifencei 2000000
 #define __ELF__ 1
 #define LAMP 1
-#define CPU_ID 0
+#define CPU_ID 1
 OUTPUT_FORMAT("elf32-littleriscv", "elf32-littleriscv", "elf32-littleriscv")
 OUTPUT_ARCH(riscv)
 ENTRY(_start)
-multiplier = 0;
+multiplier = 1;
 mem_lenght = 512K;
-ram_base = 0x00000100 + (multiplier*mem_lenght);
-rom_base = 0x00080100 + (multiplier*mem_lenght);
+mem_base = 0x00000100 + (multiplier*mem_lenght);
 vector_base = 0x00000000 + (multiplier*mem_lenght);
-vector_lenght = 0x100 + (multiplier*mem_lenght);
+vector_lenght = 0x100;
 MEMORY
 {
     VECTORS (rwx) : ORIGIN = vector_base, LENGTH = vector_lenght
-    rom (rxa) : ORIGIN = ram_base, LENGTH = mem_lenght
- ram (wxa) : ORIGIN = rom_base, LENGTH = mem_lenght
+    mem (rwx) : ORIGIN = mem_base, LENGTH = mem_lenght
 }
 __min_stack = 0x800;
 SECTIONS
@@ -332,7 +343,7 @@ SECTIONS
  {
   _text = .;
   KEEP (*(SORT_NONE(.init)))
- } >rom AT>rom
+ } >mem AT>mem
  .text :
  {
         . = ALIGN(4);
@@ -341,21 +352,21 @@ SECTIONS
   *(.text .text.*)
   *(.gnu.linkonce.t.*)
         . = ALIGN(4);
- } >rom AT>rom
+ } >mem AT>mem
  .fini :
  {
   KEEP (*(SORT_NONE(.fini)))
   _etext = .;
- } >rom AT>rom
+ } >mem AT>mem
  .rodata.align :
  {
   . = ALIGN(4);
   _rodata = .;
- } >rom AT>rom
+ } >mem AT>mem
  .rodata.start :
  {
   _rodata_lma = LOADADDR(.rodata.start);
- } >rom AT>rom
+ } >mem AT>mem
  .rodata :
  {
   *(.rdata)
@@ -363,16 +374,16 @@ SECTIONS
   *(.gnu.linkonce.r.*)
   . = ALIGN(4);
   _erodata = .;
- } >rom AT>rom
+ } >mem AT>mem
  .data.align :
  {
   . = ALIGN(4);
   _data = .;
- } >ram AT>rom
+ } >mem AT>mem
  .data.start :
  {
   _data_lma = LOADADDR(.data.start);
- } >ram AT>rom
+ } >mem AT>mem
  .data :
  {
   *(.data .data.*)
@@ -390,16 +401,16 @@ SECTIONS
   *(.srodata .srodata.*)
   . = ALIGN(4);
   _edata = .;
- } >ram AT>rom
+ } >mem AT>mem
  .bss.align :
  {
   . = ALIGN(4);
   _bss = .;
- } >ram AT>rom
+ } >mem AT>mem
  .bss.start :
  {
   _bss_lma = LOADADDR(.bss.start);
- } >ram AT>rom
+ } >mem AT>mem
  .bss :
  {
   *(.sbss*)
@@ -409,7 +420,7 @@ SECTIONS
   *(COMMON)
   . = ALIGN(4);
   _ebss = .;
- } >ram AT>rom
+ } >mem AT>mem
  . = ALIGN(8);
  _end = .;
  .stack :
@@ -417,5 +428,5 @@ SECTIONS
   . = ALIGN(16);
   . += __stack_size;
   _stack_top = .;
- } >ram AT>ram
+ } >mem AT>mem
 }

@@ -19,8 +19,7 @@ ENTRY(_start)
 
 #ifdef QEMU
 mem_lenght		= 512K;
-ram_base 		= 0x80000000;
-rom_base 		= 0x80080000;
+mem_base 		= 0x80000000;
 vector_base 	= 0x00000000;
 vector_lenght  	= 0x0;
 
@@ -29,10 +28,9 @@ vector_lenght  	= 0x0;
 */
 multiplier 		= CPU_ID;
 mem_lenght		= 512K;
-ram_base 		= 0x00000100 	+ (multiplier*mem_lenght);
-rom_base 		= 0x00080100 	+ (multiplier*mem_lenght);
+mem_base 		= 0x00000100 	+ (multiplier*mem_lenght);
 vector_base 	= 0x00000000 	+ (multiplier*mem_lenght);
-vector_lenght  	= 0x100 		+ (multiplier*mem_lenght);
+vector_lenght  	= 0x100;
 #endif
 
 MEMORY
@@ -40,8 +38,7 @@ MEMORY
     /* Memory section to accommodate the vector table */
     VECTORS (rwx) : ORIGIN = vector_base, LENGTH = vector_lenght
     /* Memory section to store program and data */
-    rom (rxa) : ORIGIN = ram_base, LENGTH = mem_lenght
-	ram (wxa) : ORIGIN = rom_base, LENGTH = mem_lenght
+    mem (rwx) : ORIGIN = mem_base, LENGTH = mem_lenght
 }
 
 __min_stack      = 0x800;   /* 2K minimum stack */
@@ -52,7 +49,7 @@ SECTIONS
 	{
 		_text = .;
 		KEEP (*(SORT_NONE(.init)))
-	} >rom AT>rom
+	} >mem AT>mem
 	
 	.text :
 	{
@@ -62,24 +59,24 @@ SECTIONS
 		*(.text .text.*)
 		*(.gnu.linkonce.t.*)
         . = ALIGN(4);
-	} >rom AT>rom
+	} >mem AT>mem
 
 	.fini :
 	{
 		KEEP (*(SORT_NONE(.fini)))
 		_etext = .;
-	} >rom AT>rom
+	} >mem AT>mem
 
 	.rodata.align :
 	{
 		. = ALIGN(4);
 		_rodata = .;
-	} >rom AT>rom
+	} >mem AT>mem
 
 	.rodata.start :
 	{
 		_rodata_lma = LOADADDR(.rodata.start);
-	} >rom AT>rom
+	} >mem AT>mem
 
 	.rodata :
 	{
@@ -89,18 +86,18 @@ SECTIONS
 
 		. = ALIGN(4);
 		_erodata = .;
-	} >rom AT>rom
+	} >mem AT>mem
 
 	.data.align :
 	{
 		. = ALIGN(4);
 		_data = .;
-	} >ram AT>rom
+	} >mem AT>mem
 
 	.data.start :
 	{
 		_data_lma = LOADADDR(.data.start);
-	} >ram AT>rom
+	} >mem AT>mem
 
 	.data :
 	{
@@ -120,18 +117,18 @@ SECTIONS
 
 		. = ALIGN(4);
 		_edata = .;
-	} >ram AT>rom
+	} >mem AT>mem
 
 	.bss.align :
 	{
 		. = ALIGN(4);
 		_bss = .;
-	} >ram AT>rom
+	} >mem AT>mem
 
 	.bss.start :
 	{
 		_bss_lma = LOADADDR(.bss.start);
-	} >ram AT>rom
+	} >mem AT>mem
 
 	.bss :
 	{
@@ -143,7 +140,7 @@ SECTIONS
 
 		. = ALIGN(4);
 		_ebss = .;
-	} >ram AT>rom
+	} >mem AT>mem
 
 	. = ALIGN(8);
 	_end = .;
@@ -153,6 +150,6 @@ SECTIONS
 		. = ALIGN(16);
 		. += __stack_size;
 		_stack_top = .;
-	} >ram AT>ram
+	} >mem AT>mem
 }
 
