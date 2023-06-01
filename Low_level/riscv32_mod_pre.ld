@@ -321,16 +321,14 @@
 #define __riscv_zicsr 2000000
 #define __riscv_zifencei 2000000
 #define __ELF__ 1
-#define LAMP 1
-#define CPU_ID 1
+#define QEMU 1
 OUTPUT_FORMAT("elf32-littleriscv", "elf32-littleriscv", "elf32-littleriscv")
 OUTPUT_ARCH(riscv)
 ENTRY(_start)
-multiplier = 1;
 mem_lenght = 512K;
-mem_base = 0x00000100 + (multiplier*mem_lenght);
-vector_base = 0x00000000 + (multiplier*mem_lenght);
-vector_lenght = 0x100;
+mem_base = 0x80000000;
+vector_base = 0x00000000;
+vector_lenght = 0x0;
 MEMORY
 {
     VECTORS (rwx) : ORIGIN = vector_base, LENGTH = vector_lenght

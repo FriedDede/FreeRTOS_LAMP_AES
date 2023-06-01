@@ -27,7 +27,7 @@ vector_lenght  	= 0x0;
 /* LAMP
 */
 multiplier 		= CPU_ID;
-mem_lenght		= 512K;
+mem_lenght		= 160K;
 mem_base 		= 0x00000100 	+ (multiplier*mem_lenght);
 vector_base 	= 0x00000000 	+ (multiplier*mem_lenght);
 vector_lenght  	= 0x100;

@@ -55,7 +55,9 @@ writes to the queue.  Therefore the queue will never have more than one item in
 it at any time, and even with a queue length of 1, the sending task will never
 find the queue full. */
 
-#define aesFAKE_COUNT (1)
+#define aesFAKE_COUNT (4)
+#define aesBATCH_SIZE (2)
+
 #define init_state                                                                                     \
 	{                                                                                                  \
 		0x40, 0x41, 0x40, 0x41, 0x40, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41 \
@@ -69,17 +71,19 @@ find the queue full. */
 		0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c \
 	}
 
-typedef struct aes_param
+typedef struct aes_cb
 {
 	uint8_t tag;
 	uint8_t *key;
 	uint8_t *state;
+	uint8_t finished;
 	TaskHandle_t task;
-} aes_param_t;
+} aes_cb_t;
 
 uint8_t states[aesFAKE_COUNT +1][16];
 uint8_t keys[aesFAKE_COUNT +1][16];
-aes_param_t aes_CB[aesFAKE_COUNT + 1];
+aes_cb_t aes_CB[aesFAKE_COUNT + 1];
+uint32_t aes_finished_count = 0;
 
 extern int aes_run(uint8_t *state, uint8_t *key);
 
@@ -87,11 +91,38 @@ extern int aes_run(uint8_t *state, uint8_t *key);
 
 static void prvPriorityManagerTask(void *pvParameters)
 {
-	aes_param_t *aes_current_cb = (aes_param_t *) pvParameters;
+	aes_cb_t *aes_current_cb = (aes_cb_t *) pvParameters;
 	uint32_t selector = 0;
+	uint32_t run_number = 0;
 	while (1)
 	{	
 		portENTER_CRITICAL()
+		// if we have exetuted all the batches we stop the scheduler
+		if (aes_finished_count == (aesFAKE_COUNT+1))
+		{
+			run_number++;
+			// scheduler stops
+			if(run_number == aesBATCH_SIZE){
+				
+				#ifdef QEMU
+				vSendString("finished");
+				#endif
+				vTaskEndScheduler();
+			}
+			// if we still have batches to do we reset all the aeses "finished" flags
+			else{
+				for (uint8_t i = 0; i < (aesFAKE_COUNT +1); i++)
+				{
+				aes_current_cb[i].finished = 0;
+				}
+				#ifdef QEMU
+				vSendString("next run");
+				#endif
+			}
+			aes_finished_count = 0;
+		}
+		
+		// interleaving scheduler for the aes processes
 		#ifdef QEMU
 		selector += 1;
 		#else
@@ -100,15 +131,29 @@ static void prvPriorityManagerTask(void *pvParameters)
 		selector = selector % (aesFAKE_COUNT +1 );
 		for (uint8_t i = 0; i < (aesFAKE_COUNT + 1); i++)
 		{
-			TaskHandle_t aes_selected_handler = aes_current_cb[i].task;
+			// select the next task to be run
 			if (i != selector)
 			{
-				vTaskPrioritySet(aes_selected_handler, mainAES_TASK_PRIOTIY);
+				vTaskPrioritySet(aes_current_cb[i].task, mainAES_TASK_PRIOTIY);
 			}
+			else if( i == selector && aes_current_cb[i].finished == 0)
+			{
+				vTaskPrioritySet(aes_current_cb[i].task, mainPRIO_MANAGER_TASK_PRIOTIY);
+			}
+			// if the selected task has already finished we select the first one not finished
 			else{
-				vTaskPrioritySet(aes_selected_handler, mainPRIO_MANAGER_TASK_PRIOTIY);
+				for (uint8_t j = 0; i < (aesFAKE_COUNT +1); i++)
+				{
+					if (aes_current_cb[j].finished == 0)
+					{
+						vTaskPrioritySet(aes_current_cb[j].task, mainPRIO_MANAGER_TASK_PRIOTIY);
+						break;
+					}
+				}
 			}
+			#ifdef QEMU
 			vSendString("scheduling");
+			#endif
 		}
 		portEXIT_CRITICAL()
 		taskYIELD()
@@ -117,7 +162,7 @@ static void prvPriorityManagerTask(void *pvParameters)
 
 static void prvEncoderTask(void *pvParameters)
 {
-	aes_param_t *aes_current_cb = (aes_param_t *) pvParameters;
+	aes_cb_t *aes_current_cb = (aes_cb_t *) pvParameters;
 
 	while (1)
 	{
@@ -133,8 +178,16 @@ static void prvEncoderTask(void *pvParameters)
 			}
 			portENTER_CRITICAL();
 			vSendString(aes_buf);
+			aes_current_cb->finished = 1;
+			aes_finished_count++;
 			portEXIT_CRITICAL();
 		#endif
+			taskYIELD();
+		while(aes_current_cb->finished == 1){	
+			#ifdef QEMU
+			vSendString("suspended");
+			#endif
+		};
 	}
 }
 
@@ -178,6 +231,14 @@ int main_aes(void)
 	vSendString("AES setup start");
 #endif	
 	aesSetup();
+	xTaskCreate(	
+		prvPriorityManagerTask, 
+		"PRIORITY MANAGER", 
+		configMINIMAL_STACK_SIZE * 2U, 
+		(void *) aes_CB,
+		mainPRIO_MANAGER_TASK_PRIOTIY, 
+		NULL
+	);
 #ifdef QEMU
 	vSendString("AES setup completed");
 	vSendString("Tasks setup start");
@@ -187,6 +248,7 @@ int main_aes(void)
 		aes_CB[i].tag = i;
 		aes_CB[i].key = keys[i];
 		aes_CB[i].state = states[i];
+		aes_CB[i].finished = 0;
 		xTaskCreate(	
 			prvEncoderTask, 
 			"AES", 
@@ -201,14 +263,7 @@ int main_aes(void)
 			vSendString(buf);
 		#endif
 	}
-	xTaskCreate(	
-		prvPriorityManagerTask, 
-		"PRIORITY MANAGER", 
-		configMINIMAL_STACK_SIZE * 2U, 
-		(void *) aes_CB,
-		mainPRIO_MANAGER_TASK_PRIOTIY, 
-		NULL
-	);
+
 	#ifdef QEMU
 		vSendString( "Priority Manager task Created");
 		vSendString( "Tasks setup completed" );
