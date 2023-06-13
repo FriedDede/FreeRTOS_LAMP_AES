@@ -27,10 +27,11 @@ vector_lenght  	= 0x0;
 /* LAMP
 */
 multiplier 		= CPU_ID;
-mem_lenght		= 160K;
-mem_base 		= 0x00000100 	+ (multiplier*mem_lenght);
-vector_base 	= 0x00000000 	+ (multiplier*mem_lenght);
+total_mem 		= 256K;
 vector_lenght  	= 0x100;
+mem_lenght		= total_mem - vector_lenght;
+vector_base 	= (multiplier*total_mem);
+mem_base 		= vector_base + vector_lenght;
 #endif
 
 MEMORY
@@ -38,7 +39,7 @@ MEMORY
     /* Memory section to accommodate the vector table */
     VECTORS (rwx) : ORIGIN = vector_base, LENGTH = vector_lenght
     /* Memory section to store program and data */
-    mem (rwx) : ORIGIN = mem_base, LENGTH = mem_lenght
+    mem (awx) : ORIGIN = mem_base, LENGTH = mem_lenght
 }
 
 __min_stack      = 0x800;   /* 2K minimum stack */
@@ -145,7 +146,7 @@ SECTIONS
 	. = ALIGN(8);
 	_end = .;
 
-	.stack :
+	.stack(NOLOAD) :
 	{
 		. = ALIGN(16);
 		. += __stack_size;

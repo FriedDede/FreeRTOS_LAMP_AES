@@ -321,18 +321,21 @@
 #define __riscv_zicsr 2000000
 #define __riscv_zifencei 2000000
 #define __ELF__ 1
-#define QEMU 1
+#define LAMP 1
+#define CPU_ID 0
 OUTPUT_FORMAT("elf32-littleriscv", "elf32-littleriscv", "elf32-littleriscv")
 OUTPUT_ARCH(riscv)
 ENTRY(_start)
-mem_lenght = 512K;
-mem_base = 0x80000000;
-vector_base = 0x00000000;
-vector_lenght = 0x0;
+multiplier = 0;
+total_mem = 256K;
+vector_lenght = 0x100;
+mem_lenght = total_mem - vector_lenght;
+vector_base = (multiplier*total_mem);
+mem_base = vector_base + vector_lenght;
 MEMORY
 {
     VECTORS (rwx) : ORIGIN = vector_base, LENGTH = vector_lenght
-    mem (rwx) : ORIGIN = mem_base, LENGTH = mem_lenght
+    mem (awx) : ORIGIN = mem_base, LENGTH = mem_lenght
 }
 __min_stack = 0x800;
 SECTIONS
@@ -421,7 +424,7 @@ SECTIONS
  } >mem AT>mem
  . = ALIGN(8);
  _end = .;
- .stack :
+ .stack(NOLOAD) :
  {
   . = ALIGN(16);
   . += __stack_size;

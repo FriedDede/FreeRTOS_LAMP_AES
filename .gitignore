@@ -4,3 +4,4 @@ Build/*
 *vivado*
 toolchain/*
 riscv-gnu-toolchain/*
+.Xil*
