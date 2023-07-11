@@ -45,8 +45,8 @@
 #define mainAES_TASK_PRIOTIY (tskIDLE_PRIORITY + 1)
 #define mainPRIO_MANAGER_TASK_PRIOTIY (tskIDLE_PRIORITY + 3)
 
-#define aesFAKE_COUNT (4)
-#define aesBATCH_SIZE (2)
+#define aesFAKE_COUNT (1)
+#define aesBATCH_SIZE (3)
 
 #define init_state                                                                                     \
 	{                                                                                                  \
@@ -73,17 +73,16 @@ typedef struct aes_cb
 uint8_t states[aesFAKE_COUNT + 1][16];
 uint8_t keys[aesFAKE_COUNT + 1][16];
 aes_cb_t aes_CB[aesFAKE_COUNT + 1];
-uint32_t aes_finished_count = 0;
+uint32_t aes_finished_count = aesFAKE_COUNT + 1;
 
 extern int aes_run(uint8_t *state, uint8_t *key);
-
-/*-----------------------------------------------------------*/
 
 static void prvPriorityManagerTask(void *pvParameters)
 {
 	aes_cb_t *aes_current_cb = (aes_cb_t *)pvParameters;
 	uint32_t selector = 0;
 	uint32_t run_number = 0;
+	uint8_t next_task_selected = 0; 
 	while (1)
 	{
 		portENTER_CRITICAL()
@@ -92,13 +91,13 @@ static void prvPriorityManagerTask(void *pvParameters)
 		{
 			run_number++;
 			// scheduler stops
-			if (run_number == aesBATCH_SIZE)
+			if (run_number == aesBATCH_SIZE + 1)
 			{
-
-#ifdef QEMU
+				#ifdef QEMU
 				vSendString("finished");
-#endif
-				vTaskEndScheduler();
+				#endif
+				portDISABLE_INTERRUPTS();
+				while(1);
 			}
 			// if we still have batches to do we reset all the aeses "finished" flags
 			else
@@ -107,49 +106,51 @@ static void prvPriorityManagerTask(void *pvParameters)
 				{
 					aes_current_cb[i].finished = 0;
 				}
-#ifdef QEMU
-				vSendString("next run");
-#endif
+				#ifdef QEMU
+					vSendString("next run");
+				#endif
 			}
 			aes_finished_count = 0;
 		}
-
 // interleaving scheduler for the aes processes
-#ifdef QEMU
-		selector += 1;
-#else
-		selector = (uint32_t)trng();
-#endif
+		#ifdef QEMU
+				selector += 1;
+		#else
+				selector = (uint32_t)trng();
+		#endif
 		selector = selector % (aesFAKE_COUNT + 1);
 		for (uint8_t i = 0; i < (aesFAKE_COUNT + 1); i++)
 		{
-			// select the next task to be run
-			if (i != selector)
+			// reset all priorities
+			vTaskPrioritySet(aes_current_cb[i].task, mainAES_TASK_PRIOTIY);
+		}
+		// select the next task to be run
+		if (aes_current_cb[selector].finished == 0)
 			{
-				vTaskPrioritySet(aes_current_cb[i].task, mainAES_TASK_PRIOTIY);
+				#ifdef QEMU
+					vSendString("new task selected");
+				#endif
+				vTaskPrioritySet(aes_current_cb[selector].task, mainPRIO_MANAGER_TASK_PRIOTIY);
 			}
-			else if (i == selector && aes_current_cb[i].finished == 0)
+		// else if the selected task has already finished we select the first one not finished
+		else{
+			for (uint8_t j = 0; j < (aesFAKE_COUNT + 1); j++)
 			{
-				vTaskPrioritySet(aes_current_cb[i].task, mainPRIO_MANAGER_TASK_PRIOTIY);
-			}
-			// if the selected task has already finished we select the first one not finished
-			else
-			{
-				for (uint8_t j = 0; i < (aesFAKE_COUNT + 1); i++)
+				if (aes_current_cb[j].finished == 0)
 				{
-					if (aes_current_cb[j].finished == 0)
-					{
-						vTaskPrioritySet(aes_current_cb[j].task, mainPRIO_MANAGER_TASK_PRIOTIY);
-						break;
-					}
+					vTaskPrioritySet(aes_current_cb[j].task, mainPRIO_MANAGER_TASK_PRIOTIY);
+					#ifdef QEMU
+						vSendString("new task selected - fallback");
+					#endif
+					break;
 				}
 			}
+		}
 #ifdef QEMU
 			vSendString("scheduling");
 #endif
-		}
 		portEXIT_CRITICAL()
-			taskYIELD()
+		taskYIELD()
 	}
 }
 
@@ -160,27 +161,25 @@ static void prvEncoderTask(void *pvParameters)
 	while (1)
 	{
 		aes_run(aes_current_cb->state, aes_current_cb->key);
-#ifdef QEMU
-		char aes_buf[5 + (2 * 16)];
 		portENTER_CRITICAL();
-		sprintf(aes_buf, "AES%d:", aes_current_cb->tag);
-		portEXIT_CRITICAL();
-		for (uint8_t i = 0; i < 16; i++)
-		{
-			sprintf(aes_buf + (5 + (2 * i)), "%02x", aes_current_cb->state[i]);
-		}
-		portENTER_CRITICAL();
-		vSendString(aes_buf);
+		#ifdef QEMU
+			char aes_buf[5 + (2 * 16)];
+			sprintf(aes_buf, "AES%d:", aes_current_cb->tag);
+			for (uint8_t i = 0; i < 16; i++)
+			{
+				sprintf(aes_buf + (5 + (2 * i)), "%02x", aes_current_cb->state[i]);
+			}
+			vSendString(aes_buf);
+		#endif
 		aes_current_cb->finished = 1;
 		aes_finished_count++;
 		portEXIT_CRITICAL();
-#endif
-		taskYIELD();
 		while (aes_current_cb->finished == 1)
 		{
-#ifdef QEMU
-			vSendString("suspended");
-#endif
+			#ifdef QEMU
+				vSendString("suspended");
+			#endif
+			taskYIELD();
 		};
 	}
 }
@@ -206,17 +205,13 @@ static void aesSetup()
 			states[i][j] = temp[j];
 			keys[i][j] = temp_key[j];
 		}
-
-		if (i != 0)
+		// Super simple kay diversification, the important thing is that the fake keys must be correlated to the true key.
+	 	if (i != 0)
 		{
-			for (uint8_t k = 0; k < i; k++)
-			{
-				aes_run(keys[i], temp_puf);
-			}
+			keys[i][15] += i;
 		}
 	}
 }
-/*-----------------------------------------------------------*/
 
 int main_aes(void)
 {
@@ -241,7 +236,7 @@ int main_aes(void)
 		aes_CB[i].tag = i;
 		aes_CB[i].key = keys[i];
 		aes_CB[i].state = states[i];
-		aes_CB[i].finished = 0;
+		aes_CB[i].finished = 1;
 		xTaskCreate(
 			prvEncoderTask,
 			"AES",

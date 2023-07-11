@@ -1550,7 +1550,7 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
                         /* The priority of a task other than the currently
                          * running task is being raised.  Is the priority being
                          * raised above that of the running task? */
-                        if( uxNewPriority >= pxCurrentTCB->uxPriority )
+                        if( uxNewPriority > pxCurrentTCB->uxPriority )
                         {
                             xYieldRequired = pdTRUE;
                         }

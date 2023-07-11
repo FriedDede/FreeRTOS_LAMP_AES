@@ -213,7 +213,7 @@ int aes_run(uint8_t state[16], uint8_t key[16])
 		/* Receive initial state and encrypt it BATCH_SIZE times */
 		for (i=0 ; i<BATCH_SIZE; i++) 
 		{
-			for(iterDelay=0;iterDelay<1000;iterDelay++);
+			//for(iterDelay=0;iterDelay<1000;iterDelay++);
 		#if ISA == 1
         	for(j=0;j<16;j++)
                 printf("%02x", state[j]);
@@ -222,7 +222,7 @@ int aes_run(uint8_t state[16], uint8_t key[16])
 
 			AES_in_place(fullkeys,state);
 
-			for(iterDelay=0;iterDelay<10000;iterDelay++);
+			//for(iterDelay=0;iterDelay<10000;iterDelay++);
 
 		#if ISA == 1
             for(j=0;j<16;j++)

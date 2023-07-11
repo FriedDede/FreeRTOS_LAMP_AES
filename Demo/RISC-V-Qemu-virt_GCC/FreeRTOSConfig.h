@@ -56,8 +56,13 @@
 #define configUSE_PREEMPTION			1
 #define configUSE_IDLE_HOOK				0
 #define configUSE_TICK_HOOK				1
-#define configCPU_CLOCK_HZ				( 1000000 )
-#define configTICK_RATE_HZ				( ( TickType_t ) 1000)
+#ifdef QEMU
+	#define configCPU_CLOCK_HZ				( 1000000 )
+	#define configTICK_RATE_HZ				( ( TickType_t ) 1000)
+#else
+	#define configCPU_CLOCK_HZ				( 50000000 )
+	#define configTICK_RATE_HZ				( ( TickType_t ) 1000)
+#endif
 #define configMAX_PRIORITIES			( 7 )
 #define configMINIMAL_STACK_SIZE		( ( unsigned short ) 1024 )
 #define configTOTAL_HEAP_SIZE			( ( size_t ) 131072 )
@@ -83,10 +88,10 @@
 #define configUSE_TIMERS				1
 #define configTIMER_TASK_PRIORITY		( configMAX_PRIORITIES - 1 )
 #define configTIMER_QUEUE_LENGTH		6
-#define configTIMER_TASK_STACK_DEPTH	( 110 )
+#define configTIMER_TASK_STACK_DEPTH	( 1024 )
 
 /* RISC-V definitions. */
-#define configISR_STACK_SIZE_WORDS		300
+#define configISR_STACK_SIZE_WORDS		1024
 
 /* Task priorities.  Allow these to be overridden. */
 #ifndef uartPRIMARY_PRIORITY

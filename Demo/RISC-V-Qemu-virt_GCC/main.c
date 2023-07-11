@@ -56,6 +56,7 @@ int main( void )
 		__asm__ volatile( "csrw mtvec, %0" :: "r"( ( uintptr_t )freertos_vector_table | 0x1 ) );
 	}
 	#endif
+	
 	portENABLE_INTERRUPTS();
 #if defined(DEMO_AES)
 	ret = main_aes();
