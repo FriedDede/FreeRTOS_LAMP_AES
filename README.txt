@@ -27,4 +27,4 @@ COMPILER SETUP:
     make
 
     then you need to add $prefix/bin to PATH
-    read the readme in the riscv-gnu-toolchain repo for any doubt about those commandsS
+    read the readme in the riscv-gnu-toolchain repo for any doubt about those commands
